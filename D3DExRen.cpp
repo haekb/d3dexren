@@ -46,6 +46,7 @@ std::fstream g_SDLLogFile;
 
 void SDLLog(void* userdata, int category, SDL_LogPriority priority, const char* message)
 {
+	return;
 	// Open up SDL Log File
 	g_SDLLogFile.open("D3DRenEx.log", std::ios::out | std::ios::app);
 
@@ -108,7 +109,7 @@ uint32 d3dex_Init(InitStruct* pInitStruct)
 
 	if (!g_hScreenSurface)
 	{
-		g_hScreenSurface = SDL_CreateRGBSurfaceWithFormat(0, pInitStruct->renderMode.m_Width, pInitStruct->renderMode.m_Height, 32, SDL_PIXELFORMAT_RGB888);
+		g_hScreenSurface = SDL_CreateRGBSurfaceWithFormat(0, pInitStruct->renderMode.m_Width, pInitStruct->renderMode.m_Height, 32, SDL_PIXELFORMAT_RGBA32);//SDL_PIXELFORMAT_RGB888);
 		g_hSoftRenderer = SDL_CreateRenderer(g_hSDLWindow, -1, 0);
 		g_hMainTexture = SDL_CreateTexture(g_hSoftRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, pInitStruct->renderMode.m_Width, pInitStruct->renderMode.m_Height);//SDL_CreateTextureFromSurface(g_hSoftRenderer, g_hScreenSurface);
 	}
@@ -175,7 +176,7 @@ uint32 d3dex_BlitToScreen(intptr_t* pBlitRequest)
 
 intptr_t* d3dex_CreateSurface(uint32 nWidth, uint32 nHeight)
 {
-	SDL_Log("Calling CreateSurface");
+	//SDL_Log("Calling CreateSurface");
 	SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(0, nWidth, nHeight, 32, SDL_PIXELFORMAT_RGB888);
 
 	//g_OpenRen->m_SurfaceCache.push_back(surface);
@@ -186,7 +187,7 @@ intptr_t* d3dex_CreateSurface(uint32 nWidth, uint32 nHeight)
 // Most likely DestroySurface
 void d3dex_DestroySurface(intptr_t* pSurface)
 {
-	SDL_Log("Calling DestroySurface");
+	//SDL_Log("Calling DestroySurface");
 
 	SDL_Surface* surface = (SDL_Surface*)pSurface;
 
@@ -240,14 +241,19 @@ void d3dex_GetSurfaceDims(intptr_t* pSurface, uint32* pWidth, uint32* pHeight, u
 
 uint32 d3dex_OptimizeSurface(intptr_t* pSurface)
 {
-	SDL_Log("Calling OptimizeSurface");
+	//SDL_Log("Calling OptimizeSurface");
 
 	return 1;
 }
 
 void d3dex_UnoptimizeSurface(intptr_t* pSurface)
 {
-	SDL_Log("Calling UnoptimizeSurface");
+	//SDL_Log("Calling UnoptimizeSurface");
+}
+
+uint32 d3dex_RenderScene(intptr_t* pSceneDesc)
+{
+	return 0;
 }
 
 void d3dex_SwapBuffers(uint32 nFlags)
@@ -263,7 +269,11 @@ void d3dex_SwapBuffers(uint32 nFlags)
 
 	auto result = g_pPrimarySurface->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
 
-	
+	SDL_Surface* hSurf = SDL_CreateRGBSurfaceWithFormatFrom(ddsd.lpSurface, ddsd.dwWidth, ddsd.dwHeight, 24, ddsd.lPitch, SDL_PIXELFORMAT_RGB888);
+	//SDL_SaveBMP(hSurf, "screen.bmp");
+
+	SDL_BlitSurface(g_hScreenSurface, NULL, hSurf, NULL);
+
 	SDL_RenderClear(g_hSoftRenderer);
 
 	if (g_hScreenSurface == nullptr) {
@@ -280,7 +290,9 @@ void d3dex_SwapBuffers(uint32 nFlags)
 
 	SDL_Rect dstrct = { 0, 0, g_hScreenSurface->w, g_hScreenSurface->h};
 
-	memcpy(pixels, g_hScreenSurface->pixels, pitch * g_hScreenSurface->h);
+	//memcpy(pixels, ddsd.lpSurface, ddsd.lPitch * g_hScreenSurface->h);
+	memcpy(pixels, hSurf->pixels, pitch * hSurf->h);
+	//memcpy(pixels, g_hScreenSurface->pixels, pitch * g_hScreenSurface->h);
 	//memcpy_s(pixels, pitch * m_height, srcPixels, srcPitch * m_height);
 
 
@@ -337,7 +349,7 @@ DllExport void RenderDLLSetup(DLLRenderStruct* pRenderStruct)
 	d3d_SwapBuffers = pRenderStruct->SwapBuffers;
 	pRenderStruct->SwapBuffers = d3dex_SwapBuffers;
 
-
+	//pRenderStruct->RenderScene = d3dex_RenderScene;
 
 	bool end = true;
 }
