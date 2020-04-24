@@ -95,45 +95,22 @@ uint32 d3dex_Init(InitStruct* pInitStruct)
 
 	auto nInitResult = d3d_Init(pInitStruct);
 
-
-	//0x44CBF74 D:\Games\NOLF - dev\d3d.ren	0000000004440000	00000000000B5000
-	intptr_t* d3dRenBase = pBaseAddress;//(intptr_t*)0x4440000;
-
-	//D:\Games\NOLF - dev\d3d.ren	0000000003C20000	00000000000B5000
-
+	intptr_t* d3dRenBase = pBaseAddress;
 	intptr_t* nD3DRenSize = (intptr_t*)(((char*)pBaseAddress) + 0x0B5000);
 
-	//intptr_t* pEnd = (intptr_t*)0x0B5000;
-	//intptr_t* nD3DRenSize = pBaseAddress + pEnd;
-
-	intptr_t* pDirectDraw = *(intptr_t**)(((char*)pBaseAddress) + 0x8bf74);//0x8BF74;
-	intptr_t* pPrimarySurface = *(intptr_t**)(((char*)pBaseAddress) + 0x8bf6c);//0x8bf68);//0x8bf6c);
-
-	// Offsets
-	// d3d_CreateDevice = 0x331e0
-
+	intptr_t* pDirectDraw = *(intptr_t**)(((char*)pBaseAddress) + 0x8bf74);
+	intptr_t* pPrimarySurface = *(intptr_t**)(((char*)pBaseAddress) + 0x8bf6c);
 	
 	g_pDirectDraw = (LPDIRECTDRAW7)pDirectDraw;
 	g_pPrimarySurface = (LPDIRECTDRAWSURFACE7)pPrimarySurface;
-
-	LPDIRECTDRAW pdd = (LPDIRECTDRAW)pDirectDraw;
-	
-	DDSURFACEDESC      ddsd;
-	ZeroMemory(&ddsd, sizeof(ddsd));
-	ddsd.dwSize = sizeof(ddsd);
-
-	pdd->GetDisplayMode(&ddsd);
 
 	g_hSDLWindow = SDL_CreateWindowFrom(GetFocus());
 
 	if (!g_hScreenSurface)
 	{
 		g_hScreenSurface = SDL_CreateRGBSurfaceWithFormat(0, pInitStruct->renderMode.m_Width, pInitStruct->renderMode.m_Height, 32, SDL_PIXELFORMAT_RGB888);
-		//g_hSoftRenderer = SDL_CreateSoftwareRenderer(g_hScreenSurface);
 		g_hSoftRenderer = SDL_CreateRenderer(g_hSDLWindow, -1, 0);
-
 		g_hMainTexture = SDL_CreateTexture(g_hSoftRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, pInitStruct->renderMode.m_Width, pInitStruct->renderMode.m_Height);//SDL_CreateTextureFromSurface(g_hSoftRenderer, g_hScreenSurface);
-
 	}
 
 	return nInitResult;
@@ -277,6 +254,7 @@ void d3dex_SwapBuffers(uint32 nFlags)
 {
 	//SDL_Log("Calling Flip");
 
+	// Call the real SwapBuffer!
 	//d3d_SwapBuffers(nFlags);
 
 	DDSURFACEDESC2      ddsd;
@@ -284,9 +262,6 @@ void d3dex_SwapBuffers(uint32 nFlags)
 	ddsd.dwSize = sizeof(ddsd);
 
 	auto result = g_pPrimarySurface->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-
-
-
 
 	
 	SDL_RenderClear(g_hSoftRenderer);
